@@ -2,7 +2,7 @@
     <!-- Logo Area -->
     <div class="flex items-center justify-between h-16 border-b border-gray-100 px-4">
         <div x-show="sidebarOpen" class="transition-opacity duration-300">
-            <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
+            <img src="{{ asset('images/Walls_Logo.svg') }}" alt="Logo" class="block h-9 w-auto" />
         </div>
         <button @click="sidebarOpen = !sidebarOpen" class="text-gray-500 hover:text-gray-700 focus:outline-none">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
