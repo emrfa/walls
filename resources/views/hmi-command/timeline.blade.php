@@ -26,14 +26,19 @@
         showModal: false,
         selectedCommandId: null,
         newReason: '',
+        newAction: '',
+        newUsedParts: '',
         newStatus: 'Open',
+        stats: { open: 1, pending: 2, close: 3 },
 
         init() {
             this.fetchData();
+            this.fetchStats();
             
             this.$watch('filters', () => {
                 this.page = 1;
                 this.fetchData();
+                this.fetchStats();
             });
         },
 
@@ -65,9 +70,29 @@
                 });
         },
 
+        fetchStats() {
+            const params = new URLSearchParams();
+            Object.entries(this.filters).forEach(([key, value]) => {
+                if (value) params.append(`filter[${key}]`, value);
+            });
+
+            fetch(`/api/timeline/stats?${params.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    this.stats = data;
+                })
+                .catch(error => {
+                    console.error('Error fetching stats:', error);
+                    // Fallback for demo
+                    // this.stats = { open: 0, pending: 0, close: 0 };
+                });
+        },
+
         openReasonModal(commandId) {
             this.selectedCommandId = commandId;
             this.newReason = '';
+            this.newAction = '';
+            this.newUsedParts = '';
             this.newStatus = 'Open';
             this.showModal = true;
         },
@@ -86,6 +111,8 @@
                     user_name: 'Current User', // Placeholder
                     user_role: '',
                     message: this.newReason,
+                    action: this.newAction,
+                    used_parts: this.newUsedParts,
                     status: this.newStatus
                 });
                 this.commands[commandIndex].status = this.newStatus;
@@ -115,6 +142,60 @@
         }
     }">
         <div class="max-w-full mx-auto sm:px-6 lg:px-8">
+            <!-- Statistics Dashboard -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <!-- Open Card -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-red-500">
+                    <div class="p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-red-100 rounded-full p-3">
+                                <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-medium text-gray-900">Open Events</h3>
+                                <p class="text-2xl font-semibold text-red-600" x-text="stats.open || 0"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending Card -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-yellow-500">
+                    <div class="p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-yellow-100 rounded-full p-3">
+                                <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-medium text-gray-900">Pending Events</h3>
+                                <p class="text-2xl font-semibold text-yellow-600" x-text="stats.pending || 0"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Closed Card -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border-l-4 border-green-500">
+                    <div class="p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-green-100 rounded-full p-3">
+                                <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-medium text-gray-900">Closed Events</h3>
+                                <p class="text-2xl font-semibold text-green-600" x-text="stats.close || 0"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Table -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200 overflow-x-auto">
@@ -171,7 +252,7 @@
                                             </template>
                                         </div>
                                     </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-red-700">Duration</th>
+
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-red-700">Status</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-red-700 cursor-pointer hover:bg-red-700" @click="sortBy('user')">
                                         <div class="flex items-center justify-between">
@@ -209,7 +290,7 @@
                                     <th class="px-6 py-2 bg-white border-b border-r border-gray-200">
                                         <input type="datetime-local" x-model.debounce.500ms="filters.reset_time" class="block w-full text-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                                     </th>
-                                    <th class="px-6 py-2 bg-white border-b border-r border-gray-200"></th> <!-- Duration -->
+
                                     <th class="px-6 py-2 bg-white border-b border-r border-gray-200">
                                         <input type="text" x-model.debounce.500ms="filters.user" class="block w-full text-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Search...">
                                     </th>
@@ -235,7 +316,7 @@
                                         <td class="px-6 py-4 text-sm text-gray-900" x-text="command.command"></td>
                                         <td class="px-6 py-4 text-sm text-gray-900" x-text="command.set_time"></td>
                                         <td class="px-6 py-4 text-sm text-gray-900" x-text="command.reset_time"></td>
-                                        <td class="px-6 py-4 text-sm text-gray-900" x-text="command.duration"></td>
+
                                         <td class="px-6 py-4 text-sm">
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
                                                 :class="{
@@ -249,13 +330,13 @@
                                         </td>
                                         <td class="px-6 py-4 text-sm text-gray-900" x-text="command.user"></td>
                                         <td class="px-6 py-4 text-sm text-gray-900" x-text="command.node"></td>
-                                        <td class="px-6 py-4 text-sm text-gray-500" x-text="(command.reasons ? command.reasons.length : 0) + ' updates'"></td>
+                                        <td class="px-6 py-4 text-sm text-gray-500" x-text="command.reasons && command.reasons.length ? command.reasons.map(r => r.message).join(', ') : '-'"></td>
                                     </tr>
                                     <tr x-show="expanded" class="bg-gray-50" style="display: none;">
-                                        <td colspan="11" class="px-6 py-4">
-                                            <div class="relative pl-8 border-l-2 border-red-500 space-y-8">
-                                                <!-- Add Reason Button (Top) -->
-                                                <div class="mb-6 pb-4 border-b border-gray-200">
+                                        <td colspan="10" class="px-6 py-4">
+                                            <div class="p-4 bg-white rounded-lg shadow-inner">
+                                                <div class="flex justify-between items-center mb-4">
+                                                    <h4 class="text-lg font-semibold text-gray-700">History</h4>
                                                     <button type="button" @click="openReasonModal(command.id)" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                                                         <svg class="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -264,21 +345,31 @@
                                                     </button>
                                                 </div>
 
-                                                <template x-for="reason in command.reasons">
-                                                    <div class="relative">
-                                                        <!-- Dot -->
-                                                        <div class="absolute -left-10 mt-1.5 w-4 h-4 rounded-full bg-white border-4 border-red-500"></div>
-                                                        
-                                                        <!-- Date Header -->
-                                                        <div class="mb-1 text-sm font-bold text-gray-700" x-text="reason.date"></div>
-                                                        
-                                                        <div class="flex items-start space-x-4">
-                                                            <div class="text-xs text-gray-500 w-16 pt-1" x-text="reason.time"></div>
-                                                            <div class="flex-1 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                                                                <div class="flex items-center space-x-2 mb-2">
-                                                                    <span class="font-semibold text-red-600" x-text="reason.user_name"></span>
+                                                <table class="min-w-full divide-y divide-gray-200">
+                                                    <thead class="bg-gray-50">
+                                                        <tr>
+                                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+                                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date/Time</th>
+                                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action By</th>
+                                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Used Parts</th>
+                                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="bg-white divide-y divide-gray-200">
+                                                        <template x-for="reason in command.reasons">
+                                                            <tr>
+                                                                <td class="px-6 py-4 text-sm text-gray-900" x-text="reason.message"></td>
+                                                                <td class="px-6 py-4 text-sm text-gray-900" x-text="reason.action || '-'"></td>
+                                                                <td class="px-6 py-4 text-sm text-gray-900">
+                                                                    <div x-text="reason.date"></div>
+                                                                    <div class="text-xs text-gray-500" x-text="reason.time"></div>
+                                                                </td>
+                                                                <td class="px-6 py-4 text-sm text-gray-900" x-text="reason.user_name"></td>
+                                                                <td class="px-6 py-4 text-sm text-gray-900" x-text="reason.used_parts || '-'"></td>
+                                                                <td class="px-6 py-4 text-sm">
                                                                     <template x-if="reason.status">
-                                                                        <span class="px-2 py-0.5 text-xs font-medium rounded"
+                                                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
                                                                             :class="{
                                                                                 'text-red-600 bg-red-100': reason.status === 'Open',
                                                                                 'text-yellow-600 bg-yellow-100': reason.status === 'Pending',
@@ -288,21 +379,21 @@
                                                                             x-text="reason.status">
                                                                         </span>
                                                                     </template>
-                                                                </div>
-                                                                <p class="text-sm text-gray-700 mb-2" x-text="reason.message"></p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </template>
-                                                
-                                                <div x-show="!command.reasons || command.reasons.length === 0" class="text-sm text-gray-500 italic">No history available.</div>
+                                                                </td>
+                                                            </tr>
+                                                        </template>
+                                                        <tr x-show="!command.reasons || command.reasons.length === 0">
+                                                            <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500 italic">No history available.</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
                                             </div>
                                         </td>
                                     </tr>
                                 </tbody>
                             </template>
                             <tr x-show="commands.length === 0">
-                                <td colspan="11" class="px-6 py-4 text-center text-gray-500">No data found</td>
+                                <td colspan="10" class="px-6 py-4 text-center text-gray-500">No data found</td>
                             </tr>
                         </table>
                     </div>
@@ -359,6 +450,16 @@
                                     <div class="mt-4">
                                         <label for="reason" class="block text-sm font-medium text-gray-700">Reason</label>
                                         <textarea id="reason" x-model="newReason" rows="3" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="Enter reason here..."></textarea>
+                                    </div>
+
+                                    <div class="mt-4">
+                                        <label for="action" class="block text-sm font-medium text-gray-700">Action</label>
+                                        <input type="text" id="action" x-model="newAction" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="Enter action taken...">
+                                    </div>
+
+                                    <div class="mt-4">
+                                        <label for="used_parts" class="block text-sm font-medium text-gray-700">Used Parts</label>
+                                        <input type="text" id="used_parts" x-model="newUsedParts" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="Enter parts used...">
                                     </div>
                                 </div>
                             </div>
