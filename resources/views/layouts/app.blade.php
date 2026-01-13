@@ -41,5 +41,6 @@
                 </main>
             </div>
         </div>
+        <x-command-palette />
     </body>
 </html>

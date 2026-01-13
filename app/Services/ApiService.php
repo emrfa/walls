@@ -325,8 +325,9 @@ class ApiService
             [
                 'id' => 1,
                 'tag_id' => '413285',
-                'device_module' => 'AV',
+                'area' => 'MP1',
                 'command' => 'Mask FB Open',
+                'airpressure' => '5.0 bar',
                 'set_time' => '2025-12-01 10:32:00',
                 'reset_time' => '2025-12-01 11:32:00',
                 'duration' => '1H:2M:00S',
@@ -340,6 +341,8 @@ class ApiService
                         'user_name' => 'Joko',
                         'user_role' => '',
                         'message' => 'Sensor Rusak',
+                        'actions' => ['Ganti Sensor', 'Kalibrasi Ulang'],
+                        'used_parts' => ['Sensor', 'Kabel 2m'],
                         'status' => 'Pending',
                     ],
                     [
@@ -348,6 +351,8 @@ class ApiService
                         'user_name' => 'Kabir',
                         'user_role' => '',
                         'message' => 'Sensor Kejauhan',
+                        'actions' => ['Adjust Posisi'],
+                        'used_parts' => ['Sensor'],
                         'status' => 'Open',
                     ]
                 ]
@@ -355,8 +360,9 @@ class ApiService
             [
                 'id' => 2,
                 'tag_id' => '413203',
-                'device_module' => 'AV',
+                'area' => 'MP2',
                 'command' => 'Mask FB Close',
+                'airpressure' => '6.0 bar',
                 'set_time' => '2025-12-01 11:32:00',
                 'reset_time' => '2025-12-11 11:32:00',
                 'duration' => '240H:56M:00S',

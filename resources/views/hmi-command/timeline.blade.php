@@ -11,7 +11,7 @@
         sortDirection: 'desc',
         filters: {
             tag_id: '',
-            device: '',
+            area: '',
             command: '',
             set_time: '',
             reset_time: '',
@@ -26,8 +26,8 @@
         showModal: false,
         selectedCommandId: null,
         newReason: '',
-        newAction: '',
-        newUsedParts: '',
+        newActions: [''],
+        newUsedParts: [''],
         newStatus: 'Open',
         stats: { open: 1, pending: 2, close: 3 },
 
@@ -91,10 +91,22 @@
         openReasonModal(commandId) {
             this.selectedCommandId = commandId;
             this.newReason = '';
-            this.newAction = '';
-            this.newUsedParts = '';
+            this.newActions = [''];
+            this.newUsedParts = [''];
             this.newStatus = 'Open';
             this.showModal = true;
+        },
+        addAction() {
+            this.newActions.push('');
+        },
+        removeAction(index) {
+            this.newActions.splice(index, 1);
+        },
+        addUsedPart() {
+            this.newUsedParts.push('');
+        },
+        removeUsedPart(index) {
+            this.newUsedParts.splice(index, 1);
         },
         saveReason() {
             if (!this.newReason) return;
@@ -105,14 +117,18 @@
                 const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase();
                 const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true }).toLowerCase();
                 
+                // Pastikan tidak ada string kosong
+                const cleanActions = this.newActions.filter(a => a.trim() !== '');
+                const cleanUsedParts = this.newUsedParts.filter(p => p.trim() !== '');
+
                 this.commands[commandIndex].reasons.unshift({
                     date: dateStr,
                     time: timeStr,
                     user_name: 'Current User', // Placeholder
                     user_role: '',
                     message: this.newReason,
-                    action: this.newAction,
-                    used_parts: this.newUsedParts,
+                    actions: cleanActions,
+                    used_parts: cleanUsedParts,
                     status: this.newStatus
                 });
                 this.commands[commandIndex].status = this.newStatus;
@@ -220,10 +236,10 @@
                                             </template>
                                         </div>
                                     </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-red-700 cursor-pointer hover:bg-red-700" @click="sortBy('device_module')">
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-red-700 cursor-pointer hover:bg-red-700" @click="sortBy('area')">
                                         <div class="flex items-center justify-between">
-                                            Device/Module
-                                            <template x-if="sortField === 'device_module'">
+                                            Area
+                                            <template x-if="sortField === 'area'">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortDirection === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" /></svg>
                                             </template>
                                         </div>
@@ -232,6 +248,14 @@
                                         <div class="flex items-center justify-between">
                                             Command
                                             <template x-if="sortField === 'command'">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortDirection === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" /></svg>
+                                            </template>
+                                        </div>
+                                    </th>
+                                     <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider border-r border-red-700 cursor-pointer hover:bg-red-700" @click="sortBy('airpressure')">
+                                        <div class="flex items-center justify-between">
+                                            Air Pressure
+                                            <template x-if="sortField === 'airpressure'">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sortDirection === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" /></svg>
                                             </template>
                                         </div>
@@ -279,10 +303,13 @@
                                         <input type="text" x-model.debounce.500ms="filters.tag_id" class="block w-full text-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Search...">
                                     </th>
                                     <th class="px-6 py-2 bg-white border-b border-r border-gray-200">
-                                        <input type="text" x-model.debounce.500ms="filters.device" class="block w-full text-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Search...">
+                                        <input type="text" x-model.debounce.500ms="filters.area" class="block w-full text-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Search...">
                                     </th>
                                     <th class="px-6 py-2 bg-white border-b border-r border-gray-200">
                                         <input type="text" x-model.debounce.500ms="filters.command" class="block w-full text-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Search...">
+                                    </th>
+                                    <th class="px-6 py-2 bg-white border-b border-r border-gray-200">
+                                        <input type="text" x-model.debounce.500ms="filters.airpressure" class="block w-full text-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Search...">
                                     </th>
                                     <th class="px-6 py-2 bg-white border-b border-r border-gray-200">
                                         <input type="datetime-local" x-model.debounce.500ms="filters.set_time" class="block w-full text-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
@@ -312,8 +339,9 @@
                                             </svg>
                                         </td>
                                         <td class="px-6 py-4 text-sm text-gray-900 font-medium" x-text="command.tag_id || '-'"></td>
-                                        <td class="px-6 py-4 text-sm text-gray-900" x-text="command.device_module"></td>
+                                        <td class="px-6 py-4 text-sm text-gray-900" x-text="command.area"></td>
                                         <td class="px-6 py-4 text-sm text-gray-900" x-text="command.command"></td>
+                                        <td class="px-6 py-4 text-sm text-gray-900" x-text="command.airpressure"></td>
                                         <td class="px-6 py-4 text-sm text-gray-900" x-text="command.set_time"></td>
                                         <td class="px-6 py-4 text-sm text-gray-900" x-text="command.reset_time"></td>
 
@@ -341,7 +369,7 @@
                                                         <svg class="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                                         </svg>
-                                                        Add Reason
+                                                        Add Action
                                                     </button>
                                                 </div>
 
@@ -360,13 +388,35 @@
                                                         <template x-for="reason in command.reasons">
                                                             <tr>
                                                                 <td class="px-6 py-4 text-sm text-gray-900" x-text="reason.message"></td>
-                                                                <td class="px-6 py-4 text-sm text-gray-900" x-text="reason.action || '-'"></td>
+                                                                <td class="px-6 py-4 text-sm text-gray-900">
+                                                                    <template x-if="reason.actions && reason.actions.length > 0">
+                                                                        <ul class="list-disc list-inside">
+                                                                            <template x-for="action in reason.actions">
+                                                                                <li x-text="action"></li>
+                                                                            </template>
+                                                                        </ul>
+                                                                    </template>
+                                                                    <template x-if="!reason.actions || reason.actions.length === 0">
+                                                                        <span>-</span>
+                                                                    </template>
+                                                                </td>
                                                                 <td class="px-6 py-4 text-sm text-gray-900">
                                                                     <div x-text="reason.date"></div>
                                                                     <div class="text-xs text-gray-500" x-text="reason.time"></div>
                                                                 </td>
                                                                 <td class="px-6 py-4 text-sm text-gray-900" x-text="reason.user_name"></td>
-                                                                <td class="px-6 py-4 text-sm text-gray-900" x-text="reason.used_parts || '-'"></td>
+                                                                <td class="px-6 py-4 text-sm text-gray-900">
+                                                                    <template x-if="reason.used_parts && reason.used_parts.length > 0">
+                                                                        <ul class="list-disc list-inside">
+                                                                            <template x-for="part in reason.used_parts">
+                                                                                <li x-text="part"></li>
+                                                                            </template>
+                                                                        </ul>
+                                                                    </template>
+                                                                    <template x-if="!reason.used_parts || reason.used_parts.length === 0">
+                                                                        <span>-</span>
+                                                                    </template>
+                                                                </td>
                                                                 <td class="px-6 py-4 text-sm">
                                                                     <template x-if="reason.status">
                                                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
@@ -431,7 +481,7 @@
                         <div class="sm:flex sm:items-start">
                             <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                                 <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                    Add Reason
+                                    Add Action
                                 </h3>
                                 <div class="mt-2">
                                     <p class="text-sm text-gray-500">
@@ -453,13 +503,41 @@
                                     </div>
 
                                     <div class="mt-4">
-                                        <label for="action" class="block text-sm font-medium text-gray-700">Action</label>
-                                        <input type="text" id="action" x-model="newAction" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="Enter action taken...">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Actions</label>
+                                        <template x-for="(action, index) in newActions" :key="index">
+                                            <div class="flex gap-2 mb-2">
+                                                <input type="text" x-model="newActions[index]" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="Enter action taken...">
+                                                <button type="button" @click="removeAction(index)" class="inline-flex items-center p-1.5 border border-transparent rounded-full shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" x-show="newActions.length > 1">
+                                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                                                    </svg>
+                                                </button>
+                                                <button type="button" @click="addAction()" class="inline-flex items-center p-1.5 border border-transparent rounded-full shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" x-show="index === newActions.length - 1">
+                                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </template>
                                     </div>
 
                                     <div class="mt-4">
-                                        <label for="used_parts" class="block text-sm font-medium text-gray-700">Used Parts</label>
-                                        <input type="text" id="used_parts" x-model="newUsedParts" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="Enter parts used...">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Used Parts</label>
+                                        <template x-for="(part, index) in newUsedParts" :key="index">
+                                            <div class="flex gap-2 mb-2">
+                                                <input type="text" x-model="newUsedParts[index]" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="Enter parts used...">
+                                                <button type="button" @click="removeUsedPart(index)" class="inline-flex items-center p-1.5 border border-transparent rounded-full shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" x-show="newUsedParts.length > 1">
+                                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                                                    </svg>
+                                                </button>
+                                                <button type="button" @click="addUsedPart()" class="inline-flex items-center p-1.5 border border-transparent rounded-full shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" x-show="index === newUsedParts.length - 1">
+                                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </template>
                                     </div>
                                 </div>
                             </div>
